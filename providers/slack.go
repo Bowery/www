@@ -50,7 +50,6 @@ func (s *Slack) Init(args []string, config map[string]string) error {
 		if config["token"] != "" {
 			s.token = config["token"]
 		} else {
-			var err error
 			s.token, err = prompt.Basic("Slack Token: ", true)
 			if err != nil {
 				return err
