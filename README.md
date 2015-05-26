@@ -19,5 +19,6 @@ $ cat sample_code.js | www gist
 
 - Slack
 - Gist
+- GMail
 
 More coming! Contributions welcome!
