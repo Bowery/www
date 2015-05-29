@@ -95,7 +95,6 @@ func main() {
 
 	// If there is no valid input print help.
 	if stat.Mode()&os.ModeCharDevice != 0 {
-		// provider.Help()
 		os.Exit(1)
 	}
 

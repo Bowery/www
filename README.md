@@ -21,4 +21,8 @@ $ cat sample_code.js | www gist
 - Gist
 - GMail
 
-More coming! Contributions welcome!
+More coming!
+
+## Contributing
+
+All contributions are welcomed and certainly encouraged! Each `provider` abides by the `Provider` interface defined in `providers/provider.go`.
