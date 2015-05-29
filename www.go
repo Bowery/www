@@ -22,11 +22,13 @@ var (
 	ps         map[string]providers.Provider
 )
 
-const usage = `Usage: www <provider> [options]
+const usage = `Usage:
+  $ somecmd | www <provider> [options]
+
 www reads from standard input and pipes the given
 input to a provider.
 
-Providers: slack, gist.
+Providers: slack, gist, gmail.
 
 For information on how to use a provider
   $ www <provider> --help
@@ -42,18 +44,6 @@ func init() {
 }
 
 func main() {
-	// Verify there is valid input from Stdin.
-	stat, err := os.Stdin.Stat()
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
-
-	if stat.Mode()&os.ModeCharDevice != 0 {
-		log.Fatal(err)
-		os.Exit(1)
-	}
-
 	// Create new local config and attempt to read in configuration
 	// file specified by configPath. If the file does not exist,
 	// create it.
@@ -74,8 +64,9 @@ func main() {
 	}
 
 	// Validate and set the provider.
-	if len(os.Args) < 1 {
-		log.Fatal("Provider required.")
+	if len(os.Args) <= 1 {
+		fmt.Println(usage)
+		os.Exit(1)
 	}
 
 	provider := ps[os.Args[1]]
@@ -89,19 +80,31 @@ func main() {
 		config[os.Args[1]] = map[string]string{}
 	}
 
+	// Initialize provider. Passes flags and config
+	// for that specific provider.
+	err = provider.Init(os.Args[2:], config[os.Args[1]])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Verify there is valid input from Stdin.
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// If there is no valid input print help.
+	if stat.Mode()&os.ModeCharDevice != 0 {
+		// provider.Help()
+		os.Exit(1)
+	}
+
 	// Read in Stdin.
 	var content bytes.Buffer
 	_, err = io.Copy(&content, os.Stdin)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
-	}
-
-	// Initialize provider. Passes flags and config
-	// for that specific provider.
-	err = provider.Init(os.Args[2:], config[os.Args[1]])
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	// Execute `Send` method of provider.
