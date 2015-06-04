@@ -33,6 +33,11 @@ type gistResBody struct {
 	HTMLURL string `json:"html_url"`
 }
 
+// Setup does nothing for now.
+func (g *Gist) Setup(config map[string]string) error {
+	return nil
+}
+
 // Init reads in flags and sets the file name if specified.
 func (g *Gist) Init(args []string, config map[string]string) error {
 	g.flag = flag.NewFlagSet("gist", flag.ExitOnError)

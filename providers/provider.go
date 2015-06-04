@@ -11,6 +11,8 @@ var (
 
 // Provider is an interface for providers.
 type Provider interface {
+	Setup(config map[string]string) error
+
 	// Init creates a new instance of the Provider. args represents
 	// all command line arguments not including the executable
 	// and provider name. config represents the configuration

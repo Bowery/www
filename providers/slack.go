@@ -26,6 +26,17 @@ type Slack struct {
 	user    string
 }
 
+// Setup asks the user for their slack token.
+func (s *Slack) Setup(config map[string]string) error {
+	var err error
+	config["token"], err = prompt.Basic("Token: ", true)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Init reads in flags, setting the channel and token.
 func (s *Slack) Init(args []string, config map[string]string) error {
 	s.flag = flag.NewFlagSet("slack", flag.ExitOnError)
@@ -37,11 +48,6 @@ func (s *Slack) Init(args []string, config map[string]string) error {
 		return err
 	}
 
-	// Channel required.
-	if s.channel == "" {
-		return errSlackChannelRequired
-	}
-
 	// If no token passed as flag, check the config. If no
 	// token has been sent, prompt the user for a token and
 	// set on config variable. This will allow the token
@@ -49,13 +55,16 @@ func (s *Slack) Init(args []string, config map[string]string) error {
 	if s.token == "" {
 		if config["token"] != "" {
 			s.token = config["token"]
-		} else {
-			s.token, err = prompt.Basic("Slack Token: ", true)
-			if err != nil {
-				return err
-			}
-			config["token"] = s.token
 		}
+	}
+
+	if s.token == "" {
+		return errors.New("must set up.")
+	}
+
+	// Channel required.
+	if s.channel == "" {
+		return errSlackChannelRequired
 	}
 
 	// Create slack client.

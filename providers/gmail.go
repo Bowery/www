@@ -23,6 +23,22 @@ type GMail struct {
 	password string
 }
 
+// Setup asks the user for their email and password.
+func (g *GMail) Setup(config map[string]string) error {
+	var err error
+	config["user"], err = prompt.Basic("Email: ", true)
+	if err != nil {
+		return err
+	}
+
+	config["password"], err = prompt.Password("Password: ")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Init reads in flags, setting the recipient and authentication.
 func (g *GMail) Init(args []string, config map[string]string) error {
 	g.flag = flag.NewFlagSet("gmail", flag.ExitOnError)
@@ -41,24 +57,14 @@ func (g *GMail) Init(args []string, config map[string]string) error {
 	// Prompt user for email address and password.
 	if config["user"] != "" {
 		g.user = config["user"]
-	} else {
-		g.user, err = prompt.Basic("Email: ", true)
-		if err != nil {
-			return err
-		}
-
-		config["user"] = g.user
 	}
 
 	if config["password"] != "" {
 		g.password = config["password"]
-	} else {
-		g.password, err = prompt.Password("Password: ")
-		if err != nil {
-			return err
-		}
+	}
 
-		config["password"] = g.password
+	if g.user == "" || g.password == "" {
+		return errors.New("must set up.")
 	}
 
 	return nil

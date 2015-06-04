@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -29,6 +28,9 @@ www reads from standard input and pipes the given
 input to a provider.
 
 Providers: slack, gist, gmail.
+
+To setup a provider
+  $ www setup <provider>
 
 For information on how to use a provider
   $ www <provider> --help
@@ -54,24 +56,47 @@ func main() {
 			dat, _ := json.Marshal(config)
 			ioutil.WriteFile(configPath, dat, os.ModePerm)
 		} else {
-			log.Fatal(err)
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
 		}
 	}
 
 	err = db.Load(&config)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
 
 	// Validate and set the provider.
 	if len(os.Args) <= 1 {
 		fmt.Println(usage)
-		os.Exit(1)
+		os.Exit(2)
 	}
 
-	provider := ps[os.Args[1]]
+	var provider providers.Provider
+	if os.Args[1] == "setup" {
+		if len(os.Args) > 2 {
+			_, ok := config[os.Args[2]]
+			if !ok {
+				config[os.Args[2]] = map[string]string{}
+			}
+
+			provider = ps[os.Args[2]]
+			provider.Setup(config[os.Args[2]])
+			err = db.Save(config)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				os.Exit(1)
+			}
+
+			os.Exit(0)
+		}
+	}
+
+	provider = ps[os.Args[1]]
 	if provider == nil {
-		log.Fatal("Invalid provider.")
+		fmt.Fprintln(os.Stderr, "Invalid provider.")
+		os.Exit(1)
 	}
 
 	// Fill the config with an empty entry if nil.
@@ -84,13 +109,15 @@ func main() {
 	// for that specific provider.
 	err = provider.Init(os.Args[2:], config[os.Args[1]])
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
 
 	// Verify there is valid input from Stdin.
 	stat, err := os.Stdin.Stat()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
 
 	// If there is no valid input print help.
@@ -102,19 +129,21 @@ func main() {
 	var content bytes.Buffer
 	_, err = io.Copy(&content, os.Stdin)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 
 	// Execute `Send` method of provider.
 	err = provider.Send(content)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
 
 	// Save any configuration changes made by provider.
 	err = db.Save(config)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
 }
