@@ -34,6 +34,7 @@ $ cat www.go | www gist | www gmail -to=hello@bowery.io
 - Slack
 - Gist
 - GMail
+- S3
 
 More coming!
 
