@@ -27,7 +27,7 @@ const usage = `Usage:
 www reads from standard input and pipes the given
 input to a provider.
 
-Providers: slack, gist, gmail.
+Providers: slack, gist, gmail, s3.
 
 To setup a provider
   $ www setup <provider>
